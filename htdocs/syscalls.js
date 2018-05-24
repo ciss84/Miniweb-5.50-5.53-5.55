@@ -13,6 +13,7 @@ function swapkeyval(json){
 }
 
 /* A long ass map of system call names -> number, you shouldn't need to touch this */
+var RopChain = window.Rop();
 window.syscallnames =
 {
   "sys_exit": 1,

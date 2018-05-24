@@ -421,11 +421,6 @@ tgt.c = leakval_helper;
     
     window.primitives = prim;   
 
-    /*setTimeout(function() {
-    sc = document.createElement("script");
-    sc.src="kernel.js";
-    document.body.appendChild(sc);
-    }, 100);*/
 
     
    

