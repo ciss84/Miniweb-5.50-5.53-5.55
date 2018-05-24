@@ -1,5 +1,5 @@
 # Miniweb-Ps4-5.50-5.53-5.55
-# Webkit PoC from 5.50 to 5.55 made by Ciss84, 
+# Webkit PoC from 5.50-5.53-5.55 made by Ciss84, 
 # Double Note : Miniweb Exploit Host is often detected as a virus for antiviruses. It's a false positive. To use this program, exclude it using your Antivirus parameters or disable it for the time you need.
 
 # Changes made :
