@@ -17,6 +17,7 @@ var findModuleBaseXHR = function(addr)
         addr_.sub32inplace(0x1000);
     }
 }
+
 var deref_stub_jmp = function(addr) {
   var z = p.read4(addr) & 0xFFFF;
   var y = p.read4(addr.add32(2));
@@ -25,6 +26,7 @@ var deref_stub_jmp = function(addr) {
   
   return addr.add32(y + 6);
 }
+    
 var gadget = function(o){return addr.add32(o);}
       /*
       kchain.push(window.gadgets["pop rax"]);

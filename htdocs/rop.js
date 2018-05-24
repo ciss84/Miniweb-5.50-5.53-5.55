@@ -176,7 +176,8 @@ var exploit = function() {
             }
         }
         if (!gadgets_to_find && !gadget) {
-            log("found gadgets");
+            log("stage2 loaded gadgets");
+            print("all good. gadgets test = Successful");
             if (gadgets)
                 gadgets.open = function(e){
                     gadgets.send(JSON.stringify(gadget));
@@ -296,10 +297,8 @@ var exploit = function() {
 };
     var RopChain = window.Rop();
  
-    log("--- welcome to all stage ---");
-    print("stage2");
-    print("loaded gadgets.all good. gadgets test = Successful");
-    
+    log("--- welcome to all stage ---");   
+
     var kview = new Uint8Array(0x1000);
     var kstr = p.leakval(kview).add32(0x10);
     var orig_kview_buf = p.read8(kstr);
@@ -401,10 +400,9 @@ var exploit = function() {
       
       return thread2;
       }
-
  
-log("stage3");
-    print("loaded syscalls.all good. fcall test = Successful");  
+    log("stage3 loaded syscalls");
+    print("all good. fcall test = Successful");  
     print("all stages test");
     print("NOT FULL Exploit 5.5x");
     
