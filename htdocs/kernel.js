@@ -99,7 +99,6 @@ var gadget = function(o)
   "memset":                 gadget(0x00000228),
   "setjmp":                 gadget(0x000014f8)
 };
-  
    
 ;var reenter_help = { length:
     { valueOf: function(){
